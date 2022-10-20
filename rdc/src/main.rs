@@ -3,6 +3,8 @@ use std::io::Write;
 use std::env;
 use std::path::Path;
 
+use ralfdb::add;
+
 fn use_command(db: &str) {
     env::set_var("RALF_DB", db.to_owned() + ".db");
     let mut path: String = env::var("RALF_PATH").unwrap_or(String::from(".")).to_owned();
@@ -10,8 +12,7 @@ fn use_command(db: &str) {
     path.push_str(&env::var("RALF_DB").unwrap());
     if Path::new(&path).exists() {
         println!("Now using database {}", db);
-    }
-    
+    }   
 }
 
 
@@ -35,5 +36,6 @@ fn main() -> io::Result<()> {
             _ => parse_command(&cmd.trim()),
         }
     }
+    println!("{}", add(20,22));
     Ok(())
 }
