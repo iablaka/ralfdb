@@ -2,8 +2,10 @@ use std::io;
 use std::io::Write;
 use std::env;
 use std::path::Path;
+
 use std::time::{Duration, Instant};
-use ralfdb::select;
+
+use ralfdb::{select, Metadata, table_metadata};
  
 
 fn use_command(db: &str) {
@@ -18,11 +20,12 @@ fn use_command(db: &str) {
 }
 
 fn select_command(_fields: String, table_name: String) {
+    let meta: Metadata = table_metadata(env::var("RALF_DB").unwrap(), table_name.clone());
     let start = Instant::now();
     let rows = select(env::var("RALF_DB").unwrap(), table_name);
     let duration = start.elapsed();
     if rows.len() > 0 {
-        format_rows([32,32].to_vec(), rows, duration);
+        format_rows(meta, rows, duration);
     }
 }
 
@@ -49,12 +52,12 @@ fn main() {
     }
 }
 
-fn format_rows(col_sizes: Vec<usize>, rows: Vec<String>, duration: Duration) {
-    format_header(&col_sizes,["name", "website"].to_vec());
+fn format_rows(tbl_meta: Metadata, rows: Vec<String>, duration: Duration) {
+    format_header(&tbl_meta.col_sizes,&tbl_meta.col_names);
     for row in &rows {
         let cells: Vec<&str> = row.split(',').collect();
         for (i, cell) in cells.iter().enumerate() {
-            let size = col_sizes[i];
+            let size = tbl_meta.col_sizes[i];
             print!("|{:size$}", cell.trim());
         }
         println!("|");
@@ -63,7 +66,7 @@ fn format_rows(col_sizes: Vec<usize>, rows: Vec<String>, duration: Duration) {
     println!("\nFound {} record(s) in {} sec", rows.len(), duration.as_secs_f32());
 }
 
-fn format_header(col_sizes: &Vec<usize>, col_names: Vec<&str>) {
+fn format_header(col_sizes: &Vec<usize>, col_names: &Vec<String>) {
     for (i, col_name) in col_names.iter().enumerate() {
             let size = col_sizes[i];
             print!("|{:size$}", col_name);
