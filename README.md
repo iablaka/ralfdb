@@ -1,2 +1,2 @@
 # ralfdb
-Simple RDMS based on text files
+Simple RDBMS based on text files
