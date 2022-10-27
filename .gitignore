@@ -10,4 +10,4 @@
 **/*.rs.bk
 
 # test databases
-*.db
+#*.db
