@@ -16,7 +16,10 @@ fn use_command(db: &str) {
     if Path::new(&path).exists() {
         env::set_var("RALF_DB", path);
         println!("Now using database {}", db);
-    }  
+    }
+    else {
+        println!("Could not find database {} at {}", db, path);
+    }
 }
 
 fn select_command(_fields: String, table_name: String) {
@@ -39,15 +42,23 @@ fn parse_command(cmd: &str) {
     }
 }
 fn main() {
+    let mut cmd: String = String::new();
     loop {
         print!("rdc> ");
         io::stdout().flush().unwrap();
-        let mut cmd = String::new();
-        io::stdin().read_line(&mut cmd).expect("Unknown command");
-        match cmd.to_lowercase().trim_end()  {
+        let mut input: String = String::new();
+        io::stdin().read_line(&mut input).expect("Unknown command");
+        match input.to_lowercase().trim_end()  {
             "quit" => break,
             "exit" => break,
-            _ => parse_command(&cmd.trim()),
+            _ => {
+                cmd = format!("{} {}", cmd, input.to_lowercase().trim_end()).trim().to_string();
+                if input.trim_end().ends_with(';') {
+                    cmd.pop(); //pop no longer needed final ;
+                    parse_command(&cmd.trim());
+                    cmd = String::from("");
+                }
+            },
         }
     }
 }

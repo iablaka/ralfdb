@@ -23,8 +23,6 @@ rdc> select * from customers
 You should see the content of the customers table printed and the time it took to query this database
 
 # Todo
-* manage trailing ";" and resulting multi-line queries
-* quotes or not? yes to solve next issue 
 * what about a string with a , in it. should be solved by protecting blocks per quotes
 * select some fields not them all
 * clean up main.rs adding some modules (formatters, parsers)
