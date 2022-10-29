@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 ralfdb = {path = "../ralfdb"}
+regex = "1"
