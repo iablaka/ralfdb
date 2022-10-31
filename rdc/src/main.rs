@@ -20,13 +20,19 @@ fn use_command(db: &str) {
     }
 }
 
-fn select_command(table_name: String, fields: String) {
+fn select_command(table_name: String, query_fields: String) {
     let meta: Metadata = table_metadata(env::var("RALF_DB").unwrap(), table_name.clone());
+    let mut fields: Vec<String> = Vec::new();
+    if query_fields != String::from("*") {
+        fields = query_fields.split(',').map(|s| s.trim().to_string()).collect();
+    } else {
+        fields = meta.col_names;
+    }
     let start = Instant::now();
     let rows = select(env::var("RALF_DB").unwrap(), table_name, fields);
     let duration = start.elapsed();
     if rows.len() > 0 {
-        format_rows(meta, rows, duration);
+        format_rows(meta, fields, rows, duration);
     }
 }
 
@@ -85,8 +91,8 @@ fn main() {
     }
 }
 
-fn format_rows(tbl_meta: Metadata, rows: Vec<String>, duration: Duration) {
-    format_header(&tbl_meta.col_sizes, &tbl_meta.col_names);
+fn format_rows(tbl_meta: Metadata, fields: Vec<String>, rows: Vec<String>, duration: Duration) {
+    format_header(tbl_meta, fields);
     for row in &rows {
         let cells: Vec<&str> = row.split(',').collect();
         for (i, cell) in cells.iter().enumerate() {
@@ -103,9 +109,11 @@ fn format_rows(tbl_meta: Metadata, rows: Vec<String>, duration: Duration) {
     );
 }
 
-fn format_header(col_sizes: &Vec<usize>, col_names: &Vec<String>) {
-    for (i, col_name) in col_names.iter().enumerate() {
-        let size = col_sizes[i];
+fn format_header(tbl_meta: Metadata, col_names: Vec<String>) {
+    let mut col_sizes: Vec<usize> = Vec::new();
+    for col_name in col_names.iter() {
+        let size = this_col_size(tbl_meta, col_name);
+        col_sizes.push(size);
         print!("|{:size$}", col_name);
     }
     println!("|");
@@ -115,4 +123,9 @@ fn format_header(col_sizes: &Vec<usize>, col_names: &Vec<String>) {
     }
     io::stdout().flush().unwrap();
     println!("+");
+}
+
+fn this_col_size(table_metadata: Metadata, col: &String) -> usize {
+    let col_idx = table_metadata.col_names.iter().position(|c| c == col).unwrap();
+    table_metadata.col_sizes[col_idx]
 }
