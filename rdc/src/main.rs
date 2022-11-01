@@ -26,10 +26,10 @@ fn select_command(table_name: String, query_fields: String) {
     if query_fields != String::from("*") {
         fields = query_fields.split(',').map(|s| s.trim().to_string()).collect();
     } else {
-        fields = meta.col_names;
+        fields = meta.col_names.clone();
     }
     let start = Instant::now();
-    let rows = select(env::var("RALF_DB").unwrap(), table_name, fields);
+    let rows = select(env::var("RALF_DB").unwrap(), table_name, &fields);
     let duration = start.elapsed();
     if rows.len() > 0 {
         format_rows(meta, fields, rows, duration);
@@ -92,11 +92,11 @@ fn main() {
 }
 
 fn format_rows(tbl_meta: Metadata, fields: Vec<String>, rows: Vec<String>, duration: Duration) {
-    format_header(tbl_meta, fields);
+    format_header(&tbl_meta, &fields);
     for row in &rows {
         let cells: Vec<&str> = row.split(',').collect();
         for (i, cell) in cells.iter().enumerate() {
-            let size = tbl_meta.col_sizes[i];
+            let size = this_col_size(&tbl_meta, &fields[i]);
             print!("|{:size$}", cell.trim());
         }
         println!("|");
@@ -109,7 +109,7 @@ fn format_rows(tbl_meta: Metadata, fields: Vec<String>, rows: Vec<String>, durat
     );
 }
 
-fn format_header(tbl_meta: Metadata, col_names: Vec<String>) {
+fn format_header(tbl_meta: &Metadata, col_names: &Vec<String>) {
     let mut col_sizes: Vec<usize> = Vec::new();
     for col_name in col_names.iter() {
         let size = this_col_size(tbl_meta, col_name);
@@ -125,7 +125,7 @@ fn format_header(tbl_meta: Metadata, col_names: Vec<String>) {
     println!("+");
 }
 
-fn this_col_size(table_metadata: Metadata, col: &String) -> usize {
+fn this_col_size(table_metadata: &Metadata, col: &String) -> usize {
     let col_idx = table_metadata.col_names.iter().position(|c| c == col).unwrap();
     table_metadata.col_sizes[col_idx]
 }
