@@ -14,17 +14,17 @@ cargo run
 ```
 Then at prompt
 ```
-rdc> use crm
+rdc> use crm;
 ```
 You should see a message saying you now use the crm database. Then enter
 ```
-rdc> select * from customers
+rdc> select * from customers;
 ```
 You should see the content of the customers table printed and the time it took to query this database
 
 # Todo
 * what about a string with a , in it. should be solved by protecting blocks per quotes
-* select some fields not them all
+* refacto: col size function should be a method of metadata. Enum SqlCommands
 * clean up main.rs adding some modules (formatters, parsers)
 * is_valid_query to make sure command is correct SQL => regex
 * WHERE clause
