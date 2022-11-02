@@ -7,6 +7,8 @@ use std::time::{Duration, Instant};
 
 use ralfdb::{is_valid_sql, select, table_metadata, Metadata};
 
+mod formatting;
+
 fn use_command(db: &str) {
     let mut path: String = env::var("RALF_PATH")
         .unwrap_or(String::from("."))
@@ -22,17 +24,15 @@ fn use_command(db: &str) {
 
 fn select_command(table_name: String, query_fields: String) {
     let meta: Metadata = table_metadata(env::var("RALF_DB").unwrap(), table_name.clone());
-    let mut fields: Vec<String> = Vec::new();
-    if query_fields != String::from("*") {
-        fields = query_fields.split(',').map(|s| s.trim().to_string()).collect();
-    } else {
-        fields = meta.col_names.clone();
-    }
+    let fields: Vec<String> = match query_fields.as_str() {
+        "*" => meta.col_names.clone(),
+        _ => query_fields.split(',').map(|s| s.trim().to_string()).collect()
+    };
     let start = Instant::now();
     let rows = select(env::var("RALF_DB").unwrap(), table_name, &fields);
-    let duration = start.elapsed();
+    let duration: Duration = start.elapsed();
     if rows.len() > 0 {
-        format_rows(meta, fields, rows, duration);
+        formatting::format_rows(meta, fields, rows, duration);
     }
 }
 
@@ -47,7 +47,7 @@ fn parse_command(cmd: &str) {
                     "^select (?P<fields>.+?) from (?P<table>.+?) where (?P<criteria>.+?)$",
                 )
                 .unwrap();
-                let mut re: Regex = Regex::new("").unwrap();
+                let re: Regex;
                 if where_re.is_match(cmd) {
                     re = where_re;
                 } else {
@@ -89,43 +89,4 @@ fn main() {
             }
         }
     }
-}
-
-fn format_rows(tbl_meta: Metadata, fields: Vec<String>, rows: Vec<String>, duration: Duration) {
-    format_header(&tbl_meta, &fields);
-    for row in &rows {
-        let cells: Vec<&str> = row.split(',').collect();
-        for (i, cell) in cells.iter().enumerate() {
-            let size = this_col_size(&tbl_meta, &fields[i]);
-            print!("|{:size$}", cell.trim());
-        }
-        println!("|");
-    }
-    io::stdout().flush().unwrap();
-    println!(
-        "\nFound {} record(s) in {} sec",
-        rows.len(),
-        duration.as_secs_f32()
-    );
-}
-
-fn format_header(tbl_meta: &Metadata, col_names: &Vec<String>) {
-    let mut col_sizes: Vec<usize> = Vec::new();
-    for col_name in col_names.iter() {
-        let size = this_col_size(tbl_meta, col_name);
-        col_sizes.push(size);
-        print!("|{:size$}", col_name);
-    }
-    println!("|");
-    for col_size in col_sizes.iter() {
-        let size = col_size + 1;
-        print!("{:-<size$}", "+");
-    }
-    io::stdout().flush().unwrap();
-    println!("+");
-}
-
-fn this_col_size(table_metadata: &Metadata, col: &String) -> usize {
-    let col_idx = table_metadata.col_names.iter().position(|c| c == col).unwrap();
-    table_metadata.col_sizes[col_idx]
 }
