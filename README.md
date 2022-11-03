@@ -26,7 +26,7 @@ You should see the content of the customers table printed and the time it took t
 * what about a string with a , in it. should be solved by protecting blocks per quotes
 * refacto: col size function should be a method of metadata. Enum SqlCommands
 * clean up main.rs adding some modules (formatters, parsers)
-* is_valid_query to make sure command is correct SQL => regex
+* is_valid_query to make sure command is correct SQL => sql parser crate
 * WHERE clause
 * multi-tables queries with manual joins
 * JOIN clause
